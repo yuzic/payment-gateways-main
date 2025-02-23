@@ -1,0 +1,15 @@
+/.idea/
+.env
+.vscode/
+vendor/
+build_local/
+fintech
+.DS_Store
+*.log
+
+tool__log*
+tool__result*
+
+docker-compose.override.yaml
+
+junit.xml

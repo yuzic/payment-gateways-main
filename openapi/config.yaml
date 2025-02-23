@@ -1,0 +1,5 @@
+package: openapi
+generate:
+  gorilla-server: true
+  models: true
+  embedded-spec: true

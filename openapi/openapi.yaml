@@ -1,0 +1,90 @@
+
+openapi: 3.0.1
+info:
+  title: Payment Gateway Main
+  description: Payment Gateway Main API
+  contact: { }
+  version: "1.0.0"
+servers:
+  - url: /
+paths:
+  /deposit:
+    post:
+      tags:
+        - deposit
+      summary: Create deposit
+      operationId: Deposit
+      requestBody:
+        description: create employee body
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionRequest'
+        required: true
+      responses:
+        '200':
+          description: Transaction processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+        '400':
+          description: Bad request
+        '500':
+          description: Internal server error
+  /withdrawal:
+    post:
+      summary: Withdraw transaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionRequest'
+      responses:
+        '200':
+          description: Transaction successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+        '400':
+          description: Bad request
+        '500':
+          description: Internal server error
+
+
+components:
+  schemas:
+    TransactionRequest:
+      type: object
+      properties:
+        amount:
+          type: number
+          format: double
+          description: Amount  transacted
+        currency:
+          type: string
+          description:  Currency transaction
+        user_id:
+          type: integer
+    TransactionResponse:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example:   Successfully Transaction
+        data:
+          type: object
+          properties:
+            transactionID:
+              type: integer
+            status:
+              type: string
+              example: done
+
+
+
