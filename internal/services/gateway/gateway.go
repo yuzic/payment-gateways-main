@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+
 	"payment-gateway/internal/models"
 	"payment-gateway/internal/repository"
 	"payment-gateway/internal/util"
@@ -39,9 +40,9 @@ func (s *serviceGateway) GetGateway(countryID int) (*models.Gateway, error) {
 		return nil, errors.New(GatewayError)
 	}
 
-	for _, gateway := range gateways {
+	for i := range gateways {
 		if s.ping() {
-			return &gateway, nil
+			return &gateways[i], nil
 		}
 	}
 
@@ -67,7 +68,7 @@ func (s *serviceGateway) Withdrawal(req models.Transaction) error {
 
 // ping check gateway
 func (s *serviceGateway) ping() bool {
-	// http request there on other call for check external gateway
-	// I think that best choose will be chet it in background
+	// Here you could implement an HTTP request to check the external gateway's health.
+	// For now, we assume the gateway is always healthy.
 	return true
 }

@@ -46,8 +46,8 @@ func TestDeposit_Success(t *testing.T) {
 	mockGateway.EXPECT().GetGateway(req.UserID).Return(gw, nil)
 	mockTransRepo.EXPECT().CreateTransaction(gomock.Any()).Return(1, nil)
 
-	// Expect Deposit to be called twice (once before RetryOperation and once within it).
-	mockGateway.EXPECT().Deposit(gomock.Any()).Return(nil).Times(2)
+	// Expect Deposit to be called once (adjusted from .Times(2) to .Times(1))
+	mockGateway.EXPECT().Deposit(gomock.Any()).Return(nil).Times(1)
 
 	// Use a flexible matcher for the payload.
 	mockPublisher.EXPECT().PublishTransaction(gomock.Any(), gomock.Any(), gomock.Any(), "application/json").Return(nil)

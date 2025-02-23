@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+
 	"payment-gateway/internal/kafka"
 	"payment-gateway/internal/models"
 	"payment-gateway/internal/repository"
@@ -53,9 +54,25 @@ func (s *transactionService) Deposit(req models.TransactionRequest) (*models.Tra
 		return nil, err
 	}
 
-	// some different business logic
+	tx, err := s.transaction(req, models.TransactionTypeDeposit)
+	if err != nil {
+		return nil, err
+	}
 
-	return s.transaction(req, models.TransactionTypeDeposit)
+	if err = util.RetryOperation(func() error {
+		err = s.gateway.Deposit(*tx)
+		return err
+	}, maxRetries); err != nil {
+
+		if err = s.transRepo.UpdateStatus(tx.ID, models.TransactionStatusFailed); err != nil {
+			return nil, errors.New("error s.transRepo.UpdateStatus")
+		}
+
+		return nil, errors.New("util.RetryOperation")
+	}
+
+	return tx, nil
+
 }
 
 func (s *transactionService) Withdrawal(req models.TransactionRequest) (*models.Transaction, error) {
@@ -63,8 +80,24 @@ func (s *transactionService) Withdrawal(req models.TransactionRequest) (*models.
 		return nil, err
 	}
 
-	// some different business logic
-	return s.transaction(req, models.TransactionTypeWithdrawal)
+	tx, err := s.transaction(req, models.TransactionTypeWithdrawal)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = util.RetryOperation(func() error {
+		err = s.gateway.Withdrawal(*tx)
+		return err
+	}, maxRetries); err != nil {
+
+		if err = s.transRepo.UpdateStatus(tx.ID, models.TransactionStatusFailed); err != nil {
+			return nil, errors.New("error s.transRepo.UpdateStatus")
+		}
+
+		return nil, errors.New("util.RetryOperation")
+	}
+
+	return tx, nil
 }
 
 func (s *transactionService) transaction(req models.TransactionRequest, transactionType string) (*models.Transaction, error) {
@@ -92,24 +125,6 @@ func (s *transactionService) transaction(req models.TransactionRequest, transact
 	if err != nil {
 		log.Printf("Error db.CreateTransaction: %v", err)
 		return nil, err
-	}
-
-	err = s.gateway.Deposit(tx)
-	if err != nil {
-		log.Printf("Error gateway.Deposit: %v", err)
-		return nil, err
-	}
-
-	if err = util.RetryOperation(func() error {
-		err = s.gateway.Deposit(tx)
-		return err
-	}, maxRetries); err != nil {
-
-		if err = s.transRepo.UpdateStatus(tx.ID, models.TransactionStatusFailed); err != nil {
-			return nil, errors.New("error s.transRepo.UpdateStatus")
-		}
-
-		return nil, errors.New(" util.RetryOperation")
 	}
 
 	txByte, err := json.Marshal(tx)
